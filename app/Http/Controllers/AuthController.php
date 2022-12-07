@@ -9,7 +9,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
 use Symfony\Component\HttpFoundation\Response;
-
+use Illuminate\Auth\Events\Registered;
 
 class AuthController extends Controller
 {
@@ -102,6 +102,7 @@ class AuthController extends Controller
             $request->validated(),
             ['password' => bcrypt($request->password)]
         ));
+        event(new Registered($user));
 
         return response()->json([
             'message' => 'User successfully registered',

@@ -20,9 +20,9 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->string('phone', 20)->nullable();
-            $table->tinyInteger('gender');
+            $table->tinyInteger('gender')->nullable();
             $table->string('avatar', 255)->nullable();
-            $table->date('birth_date');
+            $table->date('birth_date')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

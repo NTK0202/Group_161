@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ResetPasswordController;
+use App\Http\Controllers\VerifyEmailController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -28,6 +30,14 @@ Route::prefix('auth')
         Route::delete('/logout', 'logout');
         Route::put('/change-password', 'changePassword');
         Route::put('/refresh-token', 'refresh');
+    });
+
+Route::prefix('auth')
+    ->middleware(['api'])
+    ->controller(ResetPasswordController::class)
+    ->group(function () {
+        Route::post('forgot-password', 'sendMail');
+        Route::put('forgot-password/{token}', 'reset');
     });
 
 

@@ -5,6 +5,7 @@ namespace App\Http\Requests\AuthRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Validation\Rules\Password;
 use Symfony\Component\HttpFoundation\Response;
 
 class RegisterRequest extends FormRequest
@@ -24,15 +25,12 @@ class RegisterRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             'name' => 'required|string|between:2,100',
             'email' => 'required|string|email|max:100|unique:users',
-            'gender' => 'required',
-            'birth_date' => 'required|date_format:Y-m-d',
-            'avatar' => 'required|string',
-            'password' => 'required|string|confirmed|min:6',
+            'password' => ['required', 'string', 'confirmed', 'max:32', Password::min(8)->letters()->numbers()],
         ];
     }
 
