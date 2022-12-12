@@ -18,12 +18,15 @@
 
 ### `Vẫn đứng trong nginx chạy cái này`
 - php artisan key:generate
+- php artisan migrate
+- php artisan passport:install
+- php artisan passport:keys --force
+
+### `Clear nếu bị cache gây ra lỗi`
 - php artisan cache:clear
 - php artisan config:clear
 - php artisan route:clear
 - php artisan view:clear
-- php artisan migrate
-- php artisan jwt:secret
 
 ### `Linux phải cấp quyền cho storage`
 - chmod -R 0777 storage

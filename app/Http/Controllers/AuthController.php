@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\AuthRequest\ChangePassRequest;
 use App\Http\Requests\AuthRequest\LoginRequest;
 use App\Http\Requests\AuthRequest\RegisterRequest;
+use App\Http\Requests\RefreshTokenRequest;
 use Exception;
 use Laravel\Passport\Client;
 use App\Models\User;
@@ -29,7 +30,7 @@ class AuthController extends Controller
      */
     public function __construct()
     {
-        $this->middleware('auth:api', ['except' => ['login', 'register']]);
+        $this->middleware('auth:api', ['except' => ['login', 'register', 'refreshToken']]);
         $this->client = Client::where('password_client', 1)->first();
         $this->data = [
             'grant_type' => 'password',
@@ -121,7 +122,7 @@ class AuthController extends Controller
          * @var User $user
          */
         $user = auth('api')->user();
-        $userId = auth()->user()->id;
+        $userId = $user->getAttributes()['id'];
         $user = User::where('id', $userId)->first();
         if (Hash::check($request->old_password, $user->password)) {
             if (!Hash::check($request->new_password, $user->password)) {
@@ -159,5 +160,27 @@ class AuthController extends Controller
         unset($user['password']);
         unset($user['remember_token']);
         return response()->json($user);
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function refreshToken(RefreshTokenRequest $request)
+    {
+        $data = [
+            'grant_type' => 'refresh_token',
+            'refresh_token' => $request->refresh_token,
+            'client_id' => $this->client->id,
+            'client_secret' => $this->client->secret,
+            'scope' => '*',
+        ];
+        $token = Request::create('oauth/token', 'POST', $data);
+
+        /**
+         * @var \Illuminate\Http\Response $response
+         */
+        $response = app()->handle($token);
+
+        return json_decode($response->content());
     }
 }

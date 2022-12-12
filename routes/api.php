@@ -30,8 +30,8 @@ Route::prefix('auth')
         Route::post('/register', 'register');
         Route::post('/login', 'login');
         Route::delete('/logout', 'logout');
-        Route::put('/change-password', 'changePassword');
-        Route::put('/refresh-token', 'refresh');
+        Route::post('/change-password', 'changePassword');
+        Route::post('/refresh-token', 'refreshToken');
         Route::get('/user-profile', 'userProfile');
         Route::get('/email/verify/{id}/{hash}', [VerifyEmailController::class, '__invoke'])
             ->middleware(['signed', 'throttle:6,1'])
@@ -43,7 +43,7 @@ Route::prefix('auth')
     ->controller(ResetPasswordController::class)
     ->group(function () {
         Route::post('forgot-password', 'sendMail');
-        Route::put('forgot-password/reset', 'reset');
+        Route::post('forgot-password/reset', 'reset');
     });
 
 
