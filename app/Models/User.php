@@ -6,11 +6,13 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Tymon\JWTAuth\Contracts\JWTSubject;
+use Illuminate\Support\Facades\Hash;
+use Laravel\Passport\HasApiTokens;
+use League\OAuth2\Server\Exception\OAuthServerException;
 
-class User extends Authenticatable implements JWTSubject,MustVerifyEmail
+class User extends Authenticatable implements MustVerifyEmail
 {
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, HasApiTokens;
 
     /**
      * The attributes that are mass assignable.
@@ -47,20 +49,21 @@ class User extends Authenticatable implements JWTSubject,MustVerifyEmail
     ];
 
     /**
-     * Get the identifier that will be stored in the subject claim of the JWT.
+     * Validate the password of the user for the Passport password grant.
      *
-     * @return mixed
+     * @param  string  $password
+     * @return bool
+     * @throws OAuthServerException
      */
-    public function getJWTIdentifier() {
-        return $this->getKey();
-    }
-
-    /**
-     * Return a key value array, containing any custom claims to be added to the JWT.
-     *
-     * @return array
-     */
-    public function getJWTCustomClaims() {
-        return [];
+    public function validateForPassportPasswordGrant(string $password): bool
+    {
+        if(!Hash::check($password, $this->password)) throw new
+        OAuthServerException(
+            'Email or Password is incorrect, please try again !',
+            '403',
+            'email_or_password_in',
+            '403'
+        );
+        return Hash::check($password, $this->password);
     }
 }

@@ -6,6 +6,7 @@ namespace App\Providers;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Notifications\Messages\MailMessage;
+use Laravel\Passport\Passport;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -26,6 +27,9 @@ class AuthServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->registerPolicies();
+        Passport::tokensExpireIn(now()->addHours(2));
+        Passport::refreshTokensExpireIn(now()->addMonths(2));
+        Passport::personalAccessTokensExpireIn(now()->addMonths(6));
 
         VerifyEmail::toMailUsing(function ($notifiable, $url) {
             return (new MailMessage)

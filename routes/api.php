@@ -5,6 +5,8 @@ use App\Http\Controllers\ResetPasswordController;
 use App\Http\Controllers\VerifyEmailController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Http;
 
 /*
 |--------------------------------------------------------------------------
@@ -30,6 +32,10 @@ Route::prefix('auth')
         Route::delete('/logout', 'logout');
         Route::put('/change-password', 'changePassword');
         Route::put('/refresh-token', 'refresh');
+        Route::get('/user-profile', 'userProfile');
+        Route::get('/email/verify/{id}/{hash}', [VerifyEmailController::class, '__invoke'])
+            ->middleware(['signed', 'throttle:6,1'])
+            ->name('verification.verify');
     });
 
 Route::prefix('auth')
@@ -37,7 +43,7 @@ Route::prefix('auth')
     ->controller(ResetPasswordController::class)
     ->group(function () {
         Route::post('forgot-password', 'sendMail');
-        Route::put('forgot-password/{token}', 'reset');
+        Route::put('forgot-password/reset', 'reset');
     });
 
 

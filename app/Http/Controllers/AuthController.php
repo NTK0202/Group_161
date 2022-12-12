@@ -5,14 +5,23 @@ namespace App\Http\Controllers;
 use App\Http\Requests\AuthRequest\ChangePassRequest;
 use App\Http\Requests\AuthRequest\LoginRequest;
 use App\Http\Requests\AuthRequest\RegisterRequest;
+use Exception;
+use Laravel\Passport\Client;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
+use Laravel\Passport\RefreshTokenRepository;
+use Laravel\Passport\Token;
+use Laravel\Passport\TokenRepository;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Auth\Events\Registered;
 
 class AuthController extends Controller
 {
+    private $client;
+    private array $data;
+
     /**
      * Create a new AuthController instance.
      *
@@ -21,23 +30,67 @@ class AuthController extends Controller
     public function __construct()
     {
         $this->middleware('auth:api', ['except' => ['login', 'register']]);
+        $this->client = Client::where('password_client', 1)->first();
+        $this->data = [
+            'grant_type' => 'password',
+            'client_id' => $this->client->id,
+            'client_secret' => $this->client->secret,
+            'username' => '',
+            'password' => '',
+            'scope' => '*',
+        ];
+    }
+
+    /**
+     * @param  RegisterRequest  $request
+     * @return mixed
+     * @throws Exception
+     */
+    public function register(RegisterRequest $request): mixed
+    {
+        $this->data['username'] = $request->email;
+        $this->data['password'] = $request->password;
+        $user = User::create(array_merge(
+            $request->validated(),
+            ['password' => Hash::make($request->password)]
+        ));
+        event(new Registered($user));
+        $token = Request::create('oauth/token', 'POST', $this->data);
+
+        /**
+         * @var \Illuminate\Http\Response $response
+         */
+        $response = app()->handle($token);
+        $content = json_decode($response->content());
+        $content->message = 'User successfully registered';
+        $content->user = $user;
+
+        return $content;
     }
 
     /**
      * Get a JWT via given credentials.
      *
      * @param  LoginRequest  $request
-     * @return JsonResponse
+     * @return mixed
+     * @throws Exception
      */
-    public function login(LoginRequest $request): JsonResponse
+    public function login(LoginRequest $request): mixed
     {
-        if (!$token = auth()->attempt($request->validated())) {
-            return response()->json([
-                'error' => 'Email or Password is incorrect, please try again !'
-            ], Response::HTTP_FORBIDDEN);
+        $this->data['username'] = $request->email;
+        $this->data['password'] = $request->password;
+        $token = Request::create('oauth/token', 'POST', $this->data);
+
+        /**
+         * @var \Illuminate\Http\Response $response
+         */
+        $response = app()->handle($token);
+        $content = json_decode($response->content());
+        if ($response->status() == 200) {
+            $content->user = User::where('email', $request->email)->first();
         }
 
-        return $this->createNewToken($token);
+        return $content;
     }
 
     /**
@@ -47,42 +100,37 @@ class AuthController extends Controller
      */
     public function logout(): JsonResponse
     {
-        auth()->logout();
+        /**
+         * @var User $user
+         */
+        $user = auth('api')->user();
+        $tokenId = $user->token()->getAttributes()['id'];
+        $tokenRepository = app(TokenRepository::class);
+        $refreshTokenRepository = app(RefreshTokenRepository::class);
+        // Revoke an access token...
+        $tokenRepository->revokeAccessToken($tokenId);
+        // Revoke all the token's refresh tokens...
+        $refreshTokenRepository->revokeRefreshTokensByAccessTokenId($tokenId);
 
         return response()->json(['message' => 'Member successfully signed out']);
     }
 
-    /**
-     * Get the token array structure.
-     *
-     * @param string $token
-     *
-     * @return JsonResponse
-     */
-    protected function createNewToken(string $token): JsonResponse
-    {
-        return response()->json([
-            'access_token' => $token,
-            'token_type' => 'bearer',
-            'expires_in' => getenv('JWT_TTL'),
-            'member' => auth()->user(),
-            'role' => auth()->user()->memberId->role_id ?? 3,
-        ], Response::HTTP_OK);
-    }
-
     public function changePassword(ChangePassRequest $request): JsonResponse
     {
+        /**
+         * @var User $user
+         */
+        $user = auth('api')->user();
         $userId = auth()->user()->id;
         $user = User::where('id', $userId)->first();
         if (Hash::check($request->old_password, $user->password)) {
             if (!Hash::check($request->new_password, $user->password)) {
-                $user = User::where('id', $userId)->update(
+                User::where('id', $userId)->update(
                     ['password' => bcrypt($request->new_password)]
                 );
 
                 return response()->json([
                     'message' => 'Member successfully changed password',
-                    'member_id' => $userId,
                 ], Response::HTTP_CREATED);
             } else {
                 return response()->json([
@@ -96,25 +144,6 @@ class AuthController extends Controller
         }
     }
 
-    public function register(RegisterRequest $request): JsonResponse
-    {
-        $user = User::create(array_merge(
-            $request->validated(),
-            ['password' => bcrypt($request->password)]
-        ));
-        event(new Registered($user));
-
-        return response()->json([
-            'message' => 'User successfully registered',
-            'user' => $user
-        ], Response::HTTP_CREATED);
-    }
-
-    public function refresh(): JsonResponse
-    {
-        return $this->createNewToken(auth()->refresh());
-    }
-
     /**
      * Get the authenticated User.
      *
@@ -122,6 +151,13 @@ class AuthController extends Controller
      */
     public function userProfile(): JsonResponse
     {
-        return response()->json(auth()->user());
+        /**
+         * @var User $user
+         */
+        $user = auth('api')->user();
+        $user = $user->getAttributes();
+        unset($user['password']);
+        unset($user['remember_token']);
+        return response()->json($user);
     }
 }
