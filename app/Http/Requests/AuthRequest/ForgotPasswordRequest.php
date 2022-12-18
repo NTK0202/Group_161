@@ -2,7 +2,10 @@
 
 namespace App\Http\Requests\AuthRequest;
 
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
+use Symfony\Component\HttpFoundation\Response;
 
 class ForgotPasswordRequest extends FormRequest
 {
@@ -26,5 +29,11 @@ class ForgotPasswordRequest extends FormRequest
         return [
             'email' => 'required|email',
         ];
+    }
+
+    public function failedValidation(Validator $validator) {
+        throw new HttpResponseException(response()->json([
+            'message' => 'Input data is incorrect!'
+        ], Response::HTTP_UNPROCESSABLE_ENTITY));
     }
 }

@@ -7,7 +7,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Symfony\Component\HttpFoundation\Response;
 
-class RefreshTokenRequest extends FormRequest
+class PostRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -27,7 +27,9 @@ class RefreshTokenRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'refresh_token' => 'required|string'
+            'title' => 'required|string',
+            'content_post' => 'required|string',
+            'tag' => 'required|string'
         ];
     }
 

@@ -24,7 +24,7 @@ class AuthRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         if ($this->method() == "POST"){
             return [

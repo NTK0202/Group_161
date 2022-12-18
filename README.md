@@ -18,6 +18,7 @@
 
 ### `Vẫn đứng trong nginx chạy cái này`
 - php artisan key:generate
+- php artisan migrate:reset
 - php artisan migrate
 - php artisan passport:install
 - php artisan passport:keys --force

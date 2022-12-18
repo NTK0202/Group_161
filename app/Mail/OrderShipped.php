@@ -27,9 +27,9 @@ class OrderShipped extends Mailable
     /**
      * Get the message envelope.
      *
-     * @return \Illuminate\Mail\Mailables\Envelope
+     * @return Envelope
      */
-    public function envelope()
+    public function envelope(): Envelope
     {
         return new Envelope(
             from: new Address('khangntk09@gmail.com', 'Group_161'),

@@ -1,7 +1,10 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\PostController;
+use App\Http\Controllers\QaController;
 use App\Http\Controllers\ResetPasswordController;
+use App\Http\Controllers\TagController;
 use App\Http\Controllers\VerifyEmailController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -46,4 +49,26 @@ Route::prefix('auth')
         Route::post('forgot-password/reset', 'reset');
     });
 
+Route::prefix('post')
+    ->middleware(['api', 'auth:api'])
+    ->controller(PostController::class)
+    ->group(function () {
+        Route::post('create', 'create');
+        Route::get('all', 'all');
+    });
 
+Route::prefix('qa')
+    ->middleware(['api', 'auth:api'])
+    ->controller(QaController::class)
+    ->group(function () {
+        Route::post('create', 'create');
+        Route::get('all', 'all');
+    });
+
+Route::prefix('tag')
+    ->middleware(['api', 'auth:api'])
+    ->controller(TagController::class)
+    ->group(function () {
+        Route::get('all', 'all');
+        Route::get('tag-for-post', 'tagForPost');
+    });

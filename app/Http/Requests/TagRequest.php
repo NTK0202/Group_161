@@ -7,14 +7,14 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Symfony\Component\HttpFoundation\Response;
 
-class RefreshTokenRequest extends FormRequest
+class TagRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
@@ -27,7 +27,7 @@ class RefreshTokenRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'refresh_token' => 'required|string'
+            'tag' => 'required',
         ];
     }
 

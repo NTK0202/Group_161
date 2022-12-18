@@ -34,11 +34,10 @@ class RegisterRequest extends FormRequest
         ];
     }
 
-    public function failedValidation(Validator $validator)
-    {
-        throw new HttpResponseException(response()->json(collect($validator->errors())->map(function ($error) {
-            return $error[0];
-        }), Response::HTTP_UNPROCESSABLE_ENTITY));
+    public function failedValidation(Validator $validator) {
+        throw new HttpResponseException(response()->json([
+            'message' => 'Input data is incorrect!'
+        ], Response::HTTP_UNPROCESSABLE_ENTITY));
     }
 
 }
