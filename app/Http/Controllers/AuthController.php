@@ -64,7 +64,7 @@ class AuthController extends Controller
         $response = app()->handle($token);
         $content = json_decode($response->content());
         $content->message = 'User successfully registered';
-        $content->user = $user;
+        $content->user = User::where('email', $request->email)->first();
 
         return $content;
     }
@@ -92,6 +92,7 @@ class AuthController extends Controller
             if ($response->status() == 200) {
                 $content->user = User::where('email', $request->email)->first();
             }
+
             return $content;
         } else {
             return response()->json([

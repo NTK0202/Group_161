@@ -51,10 +51,11 @@ class PostController extends Controller
         return response()->json($posts);
     }
 
-    public function all(): JsonResponse
+    public function all(PostRequest $request): JsonResponse
     {
-        $posts = Post::with('user')->with('tag')->get();
-        return response()->json($posts);
+        $orderBy = $request->order_by ?? 'asc';
+        $posts = Post::with('user')->with('tag')->orderBy('created_at', $orderBy)->get();
 
+        return response()->json($posts);
     }
 }

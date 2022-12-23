@@ -26,10 +26,16 @@ class PostRequest extends FormRequest
      */
     public function rules(): array
     {
+        if ($this->method() == "POST"){
+            return [
+                'title' => 'required|string',
+                'content_post' => 'required|string',
+                'tag' => 'required|string'
+            ];
+        }
+
         return [
-            'title' => 'required|string',
-            'content_post' => 'required|string',
-            'tag' => 'required|string'
+            'order_by' => 'nullable'
         ];
     }
 
