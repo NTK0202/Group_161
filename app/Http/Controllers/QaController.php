@@ -11,6 +11,17 @@ use Symfony\Component\HttpFoundation\Response;
 
 class QaController extends Controller
 {
+    private ?\Illuminate\Contracts\Auth\Authenticatable $user;
+    private mixed $userId;
+
+    public function __construct()
+    {
+        /**
+         * @var User $user
+         */
+        $this->user = auth('api')->user();
+        $this->userId = $this->user->getAttributes()['id'];
+    }
     public function create(QaRequest $request): JsonResponse
     {
         /**
@@ -20,14 +31,15 @@ class QaController extends Controller
         $userId = $user->getAttributes()['id'];
         $tag = Tag::where('name', $request->tag)->first();
         if (!$tag) {
-            $tag = Tag::create(['name' => $request->tag]);
+            $tagId = Tag::create(['name' => $request->tag])->id;
+        } else {
+            $tagId = $tag->id;
         }
-        $tagId = $tag->id;
         Qa::create([
             'title' => $request->title,
             'content' => $request->content_qa,
             'tag_id' => $tagId,
-            'user_id' => $userId
+            'user_id' => $this->userId
         ]);
 
         $tagTotal = $tag->total;
@@ -36,6 +48,12 @@ class QaController extends Controller
         return response()->json([
             'message' => 'Create QA successfully',
         ], Response::HTTP_CREATED);
+    }
+
+    public function show(): JsonResponse
+    {
+        $posts = Qa::where('user_id', $this->userId)->with('tag')->get();
+        return response()->json($posts);
     }
 
     public function all(): JsonResponse

@@ -60,9 +60,9 @@ class User extends Authenticatable implements MustVerifyEmail
         if(!Hash::check($password, $this->password)) throw new
         OAuthServerException(
             'Email or Password is incorrect, please try again !',
-            '403',
+            403,
             'email_or_password_in',
-            '403'
+            403
         );
         return Hash::check($password, $this->password);
     }

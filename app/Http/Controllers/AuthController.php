@@ -78,20 +78,26 @@ class AuthController extends Controller
      */
     public function login(LoginRequest $request): mixed
     {
-        $this->data['username'] = $request->email;
-        $this->data['password'] = $request->password;
-        $token = Request::create('oauth/token', 'POST', $this->data);
+        $user = User::where('email', $request->email)->first();
+        if (Hash::check($request->password, $user->password)) {
+            $this->data['username'] = $request->email;
+            $this->data['password'] = $request->password;
+            $token = Request::create('oauth/token', 'POST', $this->data);
 
-        /**
-         * @var \Illuminate\Http\Response $response
-         */
-        $response = app()->handle($token);
-        $content = json_decode($response->content());
-        if ($response->status() == 200) {
-            $content->user = User::where('email', $request->email)->first();
+            /**
+             * @var \Illuminate\Http\Response $response
+             */
+            $response = app()->handle($token);
+            $content = json_decode($response->content());
+            if ($response->status() == 200) {
+                $content->user = User::where('email', $request->email)->first();
+            }
+            return $content;
+        } else {
+            return response()->json([
+                'message' => 'Email or Password is incorrect, please try again !',
+            ], Response::HTTP_FORBIDDEN);
         }
-
-        return $content;
     }
 
     /**
