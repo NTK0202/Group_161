@@ -87,7 +87,7 @@ class QaController extends Controller
     public function detail(DetailRequest $request): JsonResponse
     {
         $qa = json_decode(Qa::where('id', $request->id)->with('tag')->first());
-        $comment = Comment::where('qa_id', $request->id)->get();
+        $comment = Comment::where('qa_id', $request->id)->with('user')->get();
         $commentQuantity = Comment::where('qa_id', $request->id)->count();
         $qa->comment_quantity = $commentQuantity;
         $qa->comment = $comment;
