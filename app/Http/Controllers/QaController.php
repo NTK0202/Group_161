@@ -88,6 +88,8 @@ class QaController extends Controller
     {
         $qa = json_decode(Qa::where('id', $request->id)->with('tag')->first());
         $comment = Comment::where('qa_id', $request->id)->get();
+        $commentQuantity = Comment::where('qa_id', $request->id)->count();
+        $qa->comment_quantity = $commentQuantity;
         $qa->comment = $comment;
 
         return response()->json($qa);

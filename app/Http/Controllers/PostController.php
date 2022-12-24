@@ -90,6 +90,8 @@ class PostController extends Controller
     {
         $post = json_decode(Post::where('id', $request->id)->with('tag')->first());
         $comment = Comment::where('post_id', $request->id)->get();
+        $commentQuantity = Comment::where('post_id', $request->id)->count();
+        $post->comment_quantity = $commentQuantity;
         $post->comment = $comment;
 
         return response()->json($post);

@@ -6,6 +6,9 @@ use App\Http\Requests\AuthRequest\ChangePassRequest;
 use App\Http\Requests\AuthRequest\LoginRequest;
 use App\Http\Requests\AuthRequest\RegisterRequest;
 use App\Http\Requests\RefreshTokenRequest;
+use App\Models\Comment;
+use App\Models\Post;
+use App\Models\Qa;
 use Exception;
 use Laravel\Passport\Client;
 use App\Models\User;
@@ -91,6 +94,10 @@ class AuthController extends Controller
             if ($response->status() == 200) {
                 $content->user = User::where('email', $request->email)->first();
             }
+
+            $content->comment_quantity = Comment::where('user_id', $content->user->id)->count();
+            $content->post_quantity = Post::where('user_id', $content->user->id)->count();
+            $content->qa_quantity = Qa::where('user_id', $content->user->id)->count();
 
             return $content;
         } else {
