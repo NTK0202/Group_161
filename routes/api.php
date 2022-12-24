@@ -56,6 +56,7 @@ Route::prefix('post')
         Route::post('create', 'create');
         Route::get('all', 'all');
         Route::get('show', 'show');
+        Route::get('search', 'search');
     });
 
 Route::prefix('qa')
@@ -65,6 +66,7 @@ Route::prefix('qa')
         Route::post('create', 'create');
         Route::get('all', 'all');
         Route::get('show', 'show');
+        Route::get('search', 'search');
     });
 
 Route::prefix('tag')
@@ -73,4 +75,5 @@ Route::prefix('tag')
     ->group(function () {
         Route::get('all', 'all');
         Route::get('tag-for-post', 'tagForPost');
+        Route::get('tag-for-qa', 'tagForQA');
     });

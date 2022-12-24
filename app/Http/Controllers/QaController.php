@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\QaRequest;
+use App\Http\Requests\SearchRequest;
 use App\Models\Qa;
 use App\Models\Tag;
 use App\Models\User;
@@ -24,17 +25,11 @@ class QaController extends Controller
     }
     public function create(QaRequest $request): JsonResponse
     {
-        /**
-         * @var User $user
-         */
-        $user = auth('api')->user();
-        $userId = $user->getAttributes()['id'];
         $tag = Tag::where('name', $request->tag)->first();
         if (!$tag) {
-            $tagId = Tag::create(['name' => $request->tag])->id;
-        } else {
-            $tagId = $tag->id;
+            $tag = Tag::create(['name' => $request->tag])->id;
         }
+        $tagId = $tag->id;
         Qa::create([
             'title' => $request->title,
             'content' => $request->content_qa,
@@ -43,22 +38,46 @@ class QaController extends Controller
         ]);
 
         $tagTotal = $tag->total;
-        Tag::where('id', $tagId)->update(['total', $tagTotal+1]);
+        Tag::where('id', $tagId)->update(['total' => $tagTotal+1]);
 
         return response()->json([
             'message' => 'Create QA successfully',
         ], Response::HTTP_CREATED);
     }
 
-    public function show(): JsonResponse
+    public function show(QaRequest $request): JsonResponse
     {
-        $posts = Qa::where('user_id', $this->userId)->with('tag')->get();
+        $orderBy = $request->order_by_created_at ?? 'asc';
+
+        $posts = Qa::where('user_id', $this->userId)
+            ->with('tag')
+            ->orderBy('created_at', $orderBy)
+            ->get();
+
         return response()->json($posts);
     }
 
-    public function all(): JsonResponse
+    public function all(QaRequest $request): JsonResponse
     {
-        $qas = Qa::with('user')->with('tag')->get();
+        $orderBy = $request->order_by_created_at ?? 'asc';
+
+        $qas = Qa::with('user')
+            ->with('tag')
+            ->orderBy('created_at', $orderBy)
+            ->get();
+
+        return response()->json($qas);
+    }
+
+    public function search(SearchRequest $request): JsonResponse
+    {
+        $likeSearch = "%" . $request->title . "%";
+        $orderBy = $request->order_by_created_at ?? 'asc';
+        $qas = Qa::where('title', 'like', $likeSearch)
+                ->with('user')
+                ->with('tag')
+                ->orderBy('created_at', $orderBy)
+                ->get();
 
         return response()->json($qas);
     }

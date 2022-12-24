@@ -41,7 +41,12 @@ class TagController extends Controller
     public function tagForQA(TagRequest $request): JsonResponse
     {
         $tag = Tag::where('name', $request->tag)->first();
-        $tagForQA = Qa::where('tag_id', $tag->id)->with('user')->get();
+        $orderBy = $request->order_by_created_at ?? 'asc';
+
+        $tagForQA = Qa::where('tag_id', $tag->id)
+            ->with('user')
+            ->orderBy('created_at', $orderBy)
+            ->get();
 
         return response()->json($tagForQA);
     }

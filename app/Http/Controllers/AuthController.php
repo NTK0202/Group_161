@@ -12,7 +12,6 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Passport\RefreshTokenRepository;
-use Laravel\Passport\Token;
 use Laravel\Passport\TokenRepository;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;

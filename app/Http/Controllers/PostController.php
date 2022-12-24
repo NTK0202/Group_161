@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\PostRequest;
+use App\Http\Requests\SearchRequest;
 use App\Models\Post;
 use App\Models\Tag;
 use App\Models\User;
@@ -45,16 +46,39 @@ class PostController extends Controller
         ], Response::HTTP_CREATED);
     }
 
-    public function show(): JsonResponse
+    public function show(PostRequest $request): JsonResponse
     {
-        $posts = Post::where('user_id', $this->userId)->with('tag')->get();
+        $orderBy = $request->order_by_created_at ?? 'asc';
+
+        $posts = Post::where('user_id', $this->userId)
+            ->with('tag')
+            ->orderBy('created_at', $orderBy)
+            ->get();
+
         return response()->json($posts);
     }
 
     public function all(PostRequest $request): JsonResponse
     {
-        $orderBy = $request->order_by ?? 'asc';
-        $posts = Post::with('user')->with('tag')->orderBy('created_at', $orderBy)->get();
+        $orderBy = $request->order_by_created_at ?? 'asc';
+        $posts = Post::with('user')
+                ->with('tag')
+                ->orderBy('created_at', $orderBy)
+                ->get();
+
+        return response()->json($posts);
+    }
+
+
+    public function search(SearchRequest $request): JsonResponse
+    {
+        $likeSearch = "%" . $request->title . "%";
+        $orderBy = $request->order_by_created_at ?? 'asc';
+        $posts = Post::where('title', 'like', $likeSearch)
+            ->with('user')
+            ->with('tag')
+            ->orderBy('created_at', $orderBy)
+            ->get();
 
         return response()->json($posts);
     }
