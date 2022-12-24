@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CommentController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\QaController;
 use App\Http\Controllers\ResetPasswordController;
@@ -57,6 +58,7 @@ Route::prefix('post')
         Route::get('all', 'all');
         Route::get('show', 'show');
         Route::get('search', 'search');
+        Route::get('detail', 'detail');
     });
 
 Route::prefix('qa')
@@ -67,6 +69,7 @@ Route::prefix('qa')
         Route::get('all', 'all');
         Route::get('show', 'show');
         Route::get('search', 'search');
+        Route::get('detail', 'detail');
     });
 
 Route::prefix('tag')
@@ -76,4 +79,11 @@ Route::prefix('tag')
         Route::get('all', 'all');
         Route::get('tag-for-post', 'tagForPost');
         Route::get('tag-for-qa', 'tagForQA');
+    });
+
+Route::prefix('comment')
+    ->middleware(['api', 'auth:api'])
+    ->controller(CommentController::class)
+    ->group(function () {
+        Route::post('create', 'create');
     });

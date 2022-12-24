@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\DetailRequest;
 use App\Http\Requests\QaRequest;
 use App\Http\Requests\SearchRequest;
+use App\Models\Comment;
 use App\Models\Qa;
 use App\Models\Tag;
 use App\Models\User;
@@ -49,12 +51,12 @@ class QaController extends Controller
     {
         $orderBy = $request->order_by_created_at ?? 'asc';
 
-        $posts = Qa::where('user_id', $this->userId)
+        $qas = Qa::where('user_id', $this->userId)
             ->with('tag')
             ->orderBy('created_at', $orderBy)
             ->get();
 
-        return response()->json($posts);
+        return response()->json($qas);
     }
 
     public function all(QaRequest $request): JsonResponse
@@ -80,5 +82,14 @@ class QaController extends Controller
                 ->get();
 
         return response()->json($qas);
+    }
+
+    public function detail(DetailRequest $request): JsonResponse
+    {
+        $qa = json_decode(Qa::where('id', $request->id)->with('tag')->first());
+        $comment = Comment::where('qa_id', $request->id)->get();
+        $qa->comment = $comment;
+
+        return response()->json($qa);
     }
 }

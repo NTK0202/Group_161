@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\DetailRequest;
 use App\Http\Requests\PostRequest;
 use App\Http\Requests\SearchRequest;
+use App\Models\Comment;
 use App\Models\Post;
 use App\Models\Tag;
 use App\Models\User;
@@ -81,5 +83,15 @@ class PostController extends Controller
             ->get();
 
         return response()->json($posts);
+    }
+
+
+    public function detail(DetailRequest $request): JsonResponse
+    {
+        $post = json_decode(Post::where('id', $request->id)->with('tag')->first());
+        $comment = Comment::where('post_id', $request->id)->get();
+        $post->comment = $comment;
+
+        return response()->json($post);
     }
 }
