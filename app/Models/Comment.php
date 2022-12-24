@@ -28,9 +28,9 @@ class Comment extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function tag(): BelongsTo
+    public function qa(): BelongsTo
     {
-        return $this->belongsTo(Tag::class, 'tag_id');
+        return $this->belongsTo(Qa::class, 'qa_id');
     }
 
     public function post(): BelongsTo

@@ -5,11 +5,15 @@ namespace App\Http\Controllers;
 use App\Http\Requests\AuthRequest\ChangePassRequest;
 use App\Http\Requests\AuthRequest\LoginRequest;
 use App\Http\Requests\AuthRequest\RegisterRequest;
+use App\Http\Requests\DownloadAvatarRequest;
 use App\Http\Requests\RefreshTokenRequest;
+use App\Http\Requests\UserInfoRequest;
+use App\Models\Avatar;
 use App\Models\Comment;
 use App\Models\Post;
 use App\Models\Qa;
 use Exception;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Passport\Client;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -158,21 +162,25 @@ class AuthController extends Controller
         }
     }
 
-    /**
-     * Get the authenticated User.
-     *
-     * @return JsonResponse
-     */
-    public function userProfile(): JsonResponse
+    public function userProfile()
     {
         /**
          * @var User $user
          */
         $user = auth('api')->user();
-        $user = $user->getAttributes();
+        $userId = $user->getAttributes()['id'];
+        $userInfo = User::where('id', $userId)->with('avatar')->first();
+        $userInfo = json_decode($userInfo);
         unset($user['password']);
         unset($user['remember_token']);
+        $user = json_decode($user);
+        $user->avatar = $userInfo->avatar->image;
         return response()->json($user);
+    }
+
+    public function downloadAvatar(DownloadAvatarRequest $request)
+    {
+        return response()->download(public_path() . '/images/avatars/' . $request->avatar);
     }
 
     /**
@@ -195,5 +203,47 @@ class AuthController extends Controller
         $response = app()->handle($token);
 
         return json_decode($response->content());
+    }
+
+    public function updateUserInfo(UserInfoRequest $request): JsonResponse
+    {
+        /**
+         * @var User $user
+         */
+        $user = auth('api')->user();
+        $userId = $user->getAttributes()['id'];
+
+        $data = $request->all();
+
+        if (isset($data['avatar'])) {
+            unset($data['avatar']);
+
+            $user = User::where('id', $userId)->first();
+            $userInfo = json_decode(User::where('id', $userId)->with('avatar')->first());
+
+            $avatar = new Avatar;
+            $getAvatar = $request->file('avatar');
+            $avatarName = $getAvatar->getClientOriginalName();
+            $imagePath = public_path() . '/images/avatars';
+
+            $avatar->path = $imagePath;
+            $avatar->image = $avatarName;
+
+            $getAvatar->move($imagePath, $avatarName);
+
+            if ($userInfo->avatar) {
+                $user->avatar()->update(['image' => $avatar->image]);
+            } else {
+                $user->avatar()->save($avatar);
+            }
+        }
+
+        $data['gender'] = ($data['gender'] == 'male') ? 1 : 0;
+
+        User::where('id', $userId)->update($data);
+        $userInfo = json_decode(User::where('id', $userId)->with('avatar')->first());
+        $userInfo->avatar = $userInfo->avatar->image;
+
+        return response()->json($userInfo);
     }
 }

@@ -37,6 +37,8 @@ Route::prefix('auth')
         Route::post('/change-password', 'changePassword');
         Route::post('/refresh-token', 'refreshToken');
         Route::get('/user-profile', 'userProfile');
+        Route::get('/download-avatar', 'downloadAvatar');
+        Route::post('/update-user-info', 'updateUserInfo');
         Route::get('/email/verify/{id}/{hash}', [VerifyEmailController::class, '__invoke'])
             ->middleware(['signed', 'throttle:6,1'])
             ->name('verification.verify');

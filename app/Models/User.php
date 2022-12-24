@@ -66,4 +66,9 @@ class User extends Authenticatable implements MustVerifyEmail
         );
         return Hash::check($password, $this->password);
     }
+
+    public function avatar(){
+        return $this->morphOne(Avatar::class , 'avatarable');
+    }
+
 }
