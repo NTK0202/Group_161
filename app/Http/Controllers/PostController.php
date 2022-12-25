@@ -55,11 +55,21 @@ class PostController extends Controller
         $per_page = $request->per_page ?? 10;
         $orderBy = $request->order_by_created_at ?? 'asc';
 
-        $posts = Post::where('user_id', $this->userId)
-            ->with('tag')
-            ->with('user')
-            ->orderBy('created_at', $orderBy)
-            ->paginate($per_page, ['*'], 'page', $page);
+        if ($request->title) {
+            $likeSearch = "%" . $request->title . "%";
+            $posts = Post::where('user_id', $this->userId)
+                ->where('title', 'like', $likeSearch)
+                ->with('tag')
+                ->with('user')
+                ->orderBy('created_at', $orderBy)
+                ->paginate($per_page, ['*'], 'page', $page);
+        } else {
+            $posts = Post::where('user_id', $this->userId)
+                ->with('tag')
+                ->with('user')
+                ->orderBy('created_at', $orderBy)
+                ->paginate($per_page, ['*'], 'page', $page);
+        }
 
         foreach ($posts as $key => $post) {
             $posts[$key]['user']['comment_quantity'] = Comment::where('user_id', $this->userId)->count();

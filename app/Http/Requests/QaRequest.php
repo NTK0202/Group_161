@@ -36,6 +36,7 @@ class QaRequest extends FormRequest
         }
 
         return [
+            'title' => 'nullable|string',
             'order_by_created_at' => [
                 'nullable',
                 Rule::in(["asc", "desc"])

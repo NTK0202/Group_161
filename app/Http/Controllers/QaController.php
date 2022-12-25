@@ -52,10 +52,19 @@ class QaController extends Controller
     {
         $orderBy = $request->order_by_created_at ?? 'asc';
 
-        $qas = Qa::where('user_id', $this->userId)
-            ->with('tag')
-            ->orderBy('created_at', $orderBy)
-            ->get();
+        if ($request->title) {
+            $likeSearch = "%" . $request->title . "%";
+            $qas = Qa::where('user_id', $this->userId)
+                ->where('title', 'like', $likeSearch)
+                ->with('tag')
+                ->orderBy('created_at', $orderBy)
+                ->get();
+        } else {
+            $qas = Qa::where('user_id', $this->userId)
+                ->with('tag')
+                ->orderBy('created_at', $orderBy)
+                ->get();
+        }
 
         foreach ($qas as $key => $post) {
             $qas[$key]['user']['comment_quantity'] = Comment::where('user_id', $this->userId)->count();
