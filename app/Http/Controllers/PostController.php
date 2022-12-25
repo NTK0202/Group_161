@@ -117,7 +117,7 @@ class PostController extends Controller
 
     public function detail(DetailRequest $request): JsonResponse
     {
-        $post = json_decode(Post::where('id', $request->id)->with('tag')->first());
+        $post = json_decode(Post::where('id', $request->id)->with('user')->with('tag')->first());
         $comment = Comment::where('post_id', $request->id)->with('user')->get();
         $commentQuantity = Comment::where('post_id', $request->id)->count();
         $post->comment_quantity = $commentQuantity;
