@@ -7,6 +7,7 @@ use App\Http\Requests\PostRequest;
 use App\Http\Requests\SearchRequest;
 use App\Models\Comment;
 use App\Models\Post;
+use App\Models\Qa;
 use App\Models\Tag;
 use App\Models\User;
 use \Illuminate\Http\JsonResponse;
@@ -50,23 +51,41 @@ class PostController extends Controller
 
     public function show(PostRequest $request): JsonResponse
     {
+        $page = $request->page ?? 1;
+        $per_page = $request->per_page ?? 10;
         $orderBy = $request->order_by_created_at ?? 'asc';
 
         $posts = Post::where('user_id', $this->userId)
             ->with('tag')
+            ->with('user')
             ->orderBy('created_at', $orderBy)
-            ->get();
+            ->paginate($per_page, ['*'], 'page', $page);
+
+        foreach ($posts as $key => $post) {
+            $posts[$key]['user']['comment_quantity'] = Comment::where('user_id', $this->userId)->count();
+            $posts[$key]['user']['post_quantity'] = Post::where('user_id', $this->userId)->count();
+            $posts[$key]['user']['qa_quantity'] = Qa::where('user_id', $this->userId)->count();
+        }
 
         return response()->json($posts);
     }
 
     public function all(PostRequest $request): JsonResponse
     {
+        $page = $request->page ?? 1;
+        $per_page = $request->per_page ?? 10;
         $orderBy = $request->order_by_created_at ?? 'asc';
+
         $posts = Post::with('user')
-                ->with('tag')
-                ->orderBy('created_at', $orderBy)
-                ->get();
+            ->with('tag')
+            ->orderBy('created_at', $orderBy)
+            ->paginate($per_page, ['*'], 'page', $page);
+
+        foreach ($posts as $key => $post) {
+            $posts[$key]['user']['comment_quantity'] = Comment::where('user_id', $this->userId)->count();
+            $posts[$key]['user']['post_quantity'] = Post::where('user_id', $this->userId)->count();
+            $posts[$key]['user']['qa_quantity'] = Qa::where('user_id', $this->userId)->count();
+        }
 
         return response()->json($posts);
     }
@@ -74,13 +93,23 @@ class PostController extends Controller
 
     public function search(SearchRequest $request): JsonResponse
     {
+        $page = $request->page ?? 1;
+        $per_page = $request->per_page ?? 10;
         $likeSearch = "%" . $request->title . "%";
         $orderBy = $request->order_by_created_at ?? 'asc';
-        $posts = Post::where('title', 'like', $likeSearch)
-            ->with('user')
-            ->with('tag')
-            ->orderBy('created_at', $orderBy)
-            ->get();
+
+        if ($request->title) {
+            $posts = Post::where('title', 'like', $likeSearch)
+                ->with('user')
+                ->with('tag')
+                ->orderBy('created_at', $orderBy)
+                ->paginate($per_page, ['*'], 'page', $page);
+        } else {
+            $posts = Post::with('user')
+                ->with('tag')
+                ->orderBy('created_at', $orderBy)
+                ->paginate($per_page, ['*'], 'page', $page);
+        }
 
         return response()->json($posts);
     }

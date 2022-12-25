@@ -33,6 +33,8 @@ class TagRequest extends FormRequest
                 'nullable',
                 Rule::in(["asc", "desc"])
             ],
+            'per_page' => 'nullable|integer',
+            'page' => 'nullable|integer',
         ];
     }
 

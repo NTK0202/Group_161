@@ -7,6 +7,8 @@ use App\Http\Requests\AuthRequest\LoginRequest;
 use App\Http\Requests\AuthRequest\RegisterRequest;
 use App\Http\Requests\DownloadAvatarRequest;
 use App\Http\Requests\RefreshTokenRequest;
+use App\Http\Requests\SearchRequest;
+use App\Http\Requests\SearchUserRequest;
 use App\Http\Requests\UserInfoRequest;
 use App\Models\Avatar;
 use App\Models\Comment;
@@ -72,6 +74,10 @@ class AuthController extends Controller
         $content->message = 'User successfully registered';
         $content->user = User::where('email', $request->email)->first();
 
+        $content->user->comment_quantity = Comment::where('user_id', $content->user->id)->count();
+        $content->user->post_quantity = Post::where('user_id', $content->user->id)->count();
+        $content->user->qa_quantity = Qa::where('user_id', $content->user->id)->count();
+
         return $content;
     }
 
@@ -99,9 +105,9 @@ class AuthController extends Controller
                 $content->user = User::where('email', $request->email)->first();
             }
 
-            $content->comment_quantity = Comment::where('user_id', $content->user->id)->count();
-            $content->post_quantity = Post::where('user_id', $content->user->id)->count();
-            $content->qa_quantity = Qa::where('user_id', $content->user->id)->count();
+            $content->user->comment_quantity = Comment::where('user_id', $content->user->id)->count();
+            $content->user->post_quantity = Post::where('user_id', $content->user->id)->count();
+            $content->user->qa_quantity = Qa::where('user_id', $content->user->id)->count();
 
             return $content;
         } else {
@@ -175,6 +181,11 @@ class AuthController extends Controller
         unset($user['remember_token']);
         $user = json_decode($user);
         $user->avatar = $userInfo->avatar->image ?? null;
+
+        $user->comment_quantity = Comment::where('user_id', $user->id)->count();
+        $user->post_quantity = Post::where('user_id', $user->id)->count();
+        $user->qa_quantity = Qa::where('user_id', $user->id)->count();
+
         return response()->json($user);
     }
 
@@ -202,7 +213,9 @@ class AuthController extends Controller
          */
         $response = app()->handle($token);
 
-        return json_decode($response->content());
+        $data = json_decode($response->content());
+
+        return response()->json($data);
     }
 
     public function updateUserInfo(UserInfoRequest $request): JsonResponse
@@ -216,8 +229,6 @@ class AuthController extends Controller
         $data = $request->all();
 
         if (isset($data['avatar'])) {
-            unset($data['avatar']);
-
             $user = User::where('id', $userId)->first();
             $userInfo = json_decode(User::where('id', $userId)->with('avatar')->first());
 
@@ -228,6 +239,7 @@ class AuthController extends Controller
 
             $avatar->path = $imagePath;
             $avatar->image = $avatarName;
+            $data['avatar'] = $avatarName;
 
             $getAvatar->move($imagePath, $avatarName);
 
@@ -238,12 +250,36 @@ class AuthController extends Controller
             }
         }
 
-        $data['gender'] = ($data['gender'] == 'male') ? 1 : 0;
+        if ($data['gender']) {
+            $data['gender'] = ($data['gender'] == 'male') ? 1 : 0;
+        }
 
         User::where('id', $userId)->update($data);
         $userInfo = json_decode(User::where('id', $userId)->with('avatar')->first());
         $userInfo->avatar = $userInfo->avatar->image ?? null;
+        if ($userInfo->gender == 0 | $userInfo->gender == 1) {
+            $userInfo->gender = ($userInfo->gender == 1) ? 'male' : 'female';
+        }
 
         return response()->json($userInfo);
+    }
+
+    public function all(SearchUserRequest $request)
+    {
+        $page = $request->page ?? 1;
+        $per_page = $request->per_page ?? 10;
+        $orderBy = $request->order_by_created_at ?? 'asc';
+
+        if ($request->name) {
+            $likeSearch = "%" . $request->name . "%";
+            $users = User::where('name', 'like', $likeSearch)
+                ->with('avatar')
+                ->orderBy('created_at', $orderBy)
+                ->paginate($per_page, ['*'], 'page', $page);
+        } else {
+            $users = User::all();
+        }
+
+        return response()->json($users);
     }
 }

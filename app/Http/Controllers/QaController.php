@@ -6,6 +6,7 @@ use App\Http\Requests\DetailRequest;
 use App\Http\Requests\QaRequest;
 use App\Http\Requests\SearchRequest;
 use App\Models\Comment;
+use App\Models\Post;
 use App\Models\Qa;
 use App\Models\Tag;
 use App\Models\User;
@@ -56,6 +57,12 @@ class QaController extends Controller
             ->orderBy('created_at', $orderBy)
             ->get();
 
+        foreach ($qas as $key => $post) {
+            $qas[$key]['user']['comment_quantity'] = Comment::where('user_id', $this->userId)->count();
+            $qas[$key]['user']['post_quantity'] = Post::where('user_id', $this->userId)->count();
+            $qas[$key]['user']['qa_quantity'] = Qa::where('user_id', $this->userId)->count();
+        }
+
         return response()->json($qas);
     }
 
@@ -68,18 +75,35 @@ class QaController extends Controller
             ->orderBy('created_at', $orderBy)
             ->get();
 
+        foreach ($qas as $key => $post) {
+            $qas[$key]['user']['comment_quantity'] = Comment::where('user_id', $this->userId)->count();
+            $qas[$key]['user']['post_quantity'] = Post::where('user_id', $this->userId)->count();
+            $qas[$key]['user']['qa_quantity'] = Qa::where('user_id', $this->userId)->count();
+        }
+
         return response()->json($qas);
     }
 
     public function search(SearchRequest $request): JsonResponse
     {
+        $page = $request->page ?? 1;
+        $per_page = $request->per_page ?? 10;
         $likeSearch = "%" . $request->title . "%";
         $orderBy = $request->order_by_created_at ?? 'asc';
-        $qas = Qa::where('title', 'like', $likeSearch)
+
+        if ($request->title) {
+            $qas = Qa::where('title', 'like', $likeSearch)
                 ->with('user')
                 ->with('tag')
                 ->orderBy('created_at', $orderBy)
-                ->get();
+                ->paginate($per_page, ['*'], 'page', $page);
+        } else {
+            $qas = Qa::select('*')
+                ->with('user')
+                ->with('tag')
+                ->orderBy('created_at', $orderBy)
+                ->paginate($per_page, ['*'], 'page', $page);
+        }
 
         return response()->json($qas);
     }
