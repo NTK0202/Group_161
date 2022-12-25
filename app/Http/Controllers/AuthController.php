@@ -174,7 +174,7 @@ class AuthController extends Controller
         unset($user['password']);
         unset($user['remember_token']);
         $user = json_decode($user);
-        $user->avatar = $userInfo->avatar->image;
+        $user->avatar = $userInfo->avatar->image ?? null;
         return response()->json($user);
     }
 
@@ -242,7 +242,7 @@ class AuthController extends Controller
 
         User::where('id', $userId)->update($data);
         $userInfo = json_decode(User::where('id', $userId)->with('avatar')->first());
-        $userInfo->avatar = $userInfo->avatar->image;
+        $userInfo->avatar = $userInfo->avatar->image ?? null;
 
         return response()->json($userInfo);
     }
